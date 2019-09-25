@@ -9,8 +9,8 @@ extern "C" {
 using namespace std;
 
 
-//#define IN_FILE_NAME "rtmp://202.69.69.180:443/webcast/bshdlive-pc"
-#define IN_FILE_NAME "cuc_ieschool.flv"
+#define IN_FILE_NAME "rtmp://202.69.69.180:443/webcast/bshdlive-pc"
+//#define IN_FILE_NAME "cuc_ieschool.flv"
 #define OUT_URL "cuc_ieschool.avi"
 
 
@@ -49,6 +49,7 @@ int main()
     AVFormatContext *in_ctx = NULL, *out_ctx = NULL;
 
     void_handle(avformat_open_input(&in_ctx, IN_FILE_NAME, NULL, NULL));
+    av_usleep(100000);
     if (!in_ctx->nb_streams) void_handle(avformat_find_stream_info(in_ctx, NULL));
     
     void_handle(avformat_alloc_output_context2(&out_ctx, NULL, "flv", OUT_URL));
@@ -94,7 +95,7 @@ int main()
         if (packet->stream_index == vedio_index) {
             int64_t nowTime = av_gettime() - start;
             if (pkt_time > nowTime) {
-              //  av_usleep(pkt_time - nowTime);
+                av_usleep(pkt_time - nowTime);
             }
         }
 
