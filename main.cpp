@@ -9,8 +9,8 @@ extern "C" {
 using namespace std;
 
 
-#define IN_FILE_NAME "cuc_ieschool.mp4"
-//#define OUT_URL "rtmp://127.0.0.1:1935/live"
+//#define IN_FILE_NAME "rtmp://202.69.69.180:443/webcast/bshdlive-pc"
+#define IN_FILE_NAME "cuc_ieschool.flv"
 #define OUT_URL "cuc_ieschool.avi"
 
 
@@ -49,6 +49,8 @@ int main()
     AVFormatContext *in_ctx = NULL, *out_ctx = NULL;
 
     void_handle(avformat_open_input(&in_ctx, IN_FILE_NAME, NULL, NULL));
+    if (!in_ctx->nb_streams) void_handle(avformat_find_stream_info(in_ctx, NULL));
+    
     void_handle(avformat_alloc_output_context2(&out_ctx, NULL, "flv", OUT_URL));
 
     //查找流索引
@@ -92,18 +94,18 @@ int main()
         if (packet->stream_index == vedio_index) {
             int64_t nowTime = av_gettime() - start;
             if (pkt_time > nowTime) {
-                av_usleep(pkt_time - nowTime);
+              //  av_usleep(pkt_time - nowTime);
             }
         }
 
         //转换时间基
         av_packet_rescale_ts(packet,
-            packet->stream_index == vedio_index ? in_ctx->streams[vedio_index]->time_base : in_ctx->streams[audio_index]->time_base,
-            packet->stream_index == vedio_index ? out_ctx->streams[vedio_index]->time_base : out_ctx->streams[audio_index]->time_base);
+            in_ctx->streams[packet->stream_index]->time_base,
+            out_ctx->streams[packet->stream_index]->time_base);
 
         if (packet->stream_index == vedio_index) {
-            printf("packet->pts = %u, ", packet->pts);     //
-            printf("index = %d, packet->dts = %u \n", index++, packet->dts);
+            printf("packet->pts = %lld, ", packet->pts);     //
+            printf("index = %d, packet->dts = %lld \n", index++, packet->dts);
         }
 
         //音视频分开
@@ -116,6 +118,11 @@ int main()
     //写文件尾
     void_handle(av_write_trailer(out_ctx));
 
-    getchar();
+    avformat_close_input(&in_ctx);
+    avformat_free_context(out_ctx);
+    av_packet_free(&packet);
+
+    cout << "over";
+    getchar();      
     return 0;
 }
